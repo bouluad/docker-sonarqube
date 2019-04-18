@@ -1,0 +1,53 @@
+version: "3.5"
+
+services:
+  sonarqube:
+    image: sonarqube:6.7.1
+    restart: unless-stopped
+    environment:
+      - SONARQUBE_JDBC_USERNAME=sonar
+      - SONARQUBE_JDBC_PASSWORD=v07IGCFCF83Z95NX
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonarqube
+    ports:
+      - "9000:9000"
+      - "9092:9092"
+    depends_on:
+      - db
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
+
+  reverse_proxy:
+    image: nginx
+    depends_on:
+      - sonarqube
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    volumes:
+      - ./v_nginx/conf:/etc/nginx/conf.d
+      - ./v_nginx/ssl:/etc/ssl
+  db:
+    image: postgres:10.1
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=v07IGCFCF83Z95NX
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - sonarqube_db:/var/lib/postgresql
+      - postgresql_data:/var/lib/postgresql/data
+
+volumes:
+  postgresql_data:
+  sonarqube_bundled-plugins:
+  sonarqube_conf:
+  sonarqube_data:
+  sonarqube_db:
+  sonarqube_extensions:
+  nginx_conf:
+  nginx_ssl:
+
